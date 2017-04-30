@@ -5,7 +5,7 @@
 Package jsoner is a cli tool to implement json-rpc of a type.
 
 
-Get your weapon! https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7
+Choose your gun! | [Aux armes!](https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7)
 
 # TOC
 - [Install](#install)
