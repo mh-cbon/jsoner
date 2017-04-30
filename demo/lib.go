@@ -11,4 +11,4 @@ func (t Tomate) GetID() string {
 }
 
 //go:generate lister vegetables_gen.go Tomate:Tomates
-//go:generate jsoner json_vegetables_gen.go Tomates:JSONTomates
+//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates

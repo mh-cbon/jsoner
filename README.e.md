@@ -23,7 +23,7 @@ Get your weapon! https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7
 ## Cli examples
 
 ```sh
-# Create a channeled version os Tomate to MyTomate
+# Create a channeled version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 ```
 # API example

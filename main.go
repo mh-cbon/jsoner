@@ -211,7 +211,7 @@ return ret, retErr
 func (t %v) %v(args io.Reader) (io.Reader, error) {
 	%v
 }`,
-			methodName, destName, methodName, body)
+			methodName, astutil.GetPointedType(destName), methodName, body)
 		fmt.Fprintln(dest)
 	}
 
