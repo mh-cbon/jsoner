@@ -1,0 +1,6 @@
+hash: ed1642da81f5a0edcf496140eae771a7976a73b26035fb6847679dd869b68236
+updated: 2017-04-30T15:02:59.003878575+02:00
+imports:
+- name: github.com/mh-cbon/astutil
+  version: 25fd57608b7239931e3aec9d1434b61fd840e850
+testImports: []
