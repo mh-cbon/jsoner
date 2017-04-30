@@ -1,4 +1,4 @@
-// Pacage jsoner is a cli tool to implement json-rpc of a type.
+// Package jsoner is a cli tool to implement json-rpc of a type.
 package main
 
 import (
