@@ -2,8 +2,10 @@
 
 [![travis Status](https://travis-ci.org//mh-cbon/jsoner.svg?branch=master)](https://travis-ci.org//mh-cbon/jsoner) [![Appveyor Status](https://ci.appveyor.com/api/projects/status//github/mh-cbon/jsoner?branch=master&svg=true)](https://ci.appveyor.com/projects//mh-cbon/jsoner) [![Go Report Card](https://goreportcard.com/badge/github.com/mh-cbon/jsoner)](https://goreportcard.com/report/github.com/mh-cbon/jsoner) [![GoDoc](https://godoc.org/github.com/mh-cbon/jsoner?status.svg)](http://godoc.org/github.com/mh-cbon/jsoner) [![MIT License](http://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Pacage jsoner is a cli tool to implement json-rpc of a type.
+Package jsoner is a cli tool to implement json-rpc of a type.
 
+
+Get your weapon! https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7
 
 # TOC
 - [Install](#install)
@@ -30,7 +32,7 @@ go install
 
 #### $ jsoner -help
 ```sh
-jsoner 0.0.0
+jsoner 0.0.1-beta
 
 Usage
 
@@ -44,7 +46,7 @@ Usage
 ## Cli examples
 
 ```sh
-# Create a channeled version os Tomate to MyTomate
+# Create a channeled version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 ```
 # API example
@@ -66,7 +68,7 @@ func (t Tomate) GetID() string {
 }
 
 //go:generate lister vegetables_gen.go Tomate:Tomates
-//go:generate jsoner json_vegetables_gen.go Tomates:JSONTomates
+//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates
 ```
 
 Following code is the generated implementation of a typed slice of `Tomate`.
@@ -85,13 +87,13 @@ import (
 	"io"
 )
 
-// JSONTomates is jsoner of Tomates.
+// JSONTomates is jsoner of *Tomates.
 type JSONTomates struct {
-	embed Tomates
+	embed *Tomates
 }
 
-// NewJSONTomates constructs a jsoner of Tomates
-func NewJSONTomates(embed Tomates) *JSONTomates {
+// NewJSONTomates constructs a jsoner of *Tomates
+func NewJSONTomates(embed *Tomates) *JSONTomates {
 	ret := &JSONTomates{
 		embed: embed,
 	}
@@ -100,7 +102,7 @@ func NewJSONTomates(embed Tomates) *JSONTomates {
 
 // Push reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Push(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Push(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -129,7 +131,7 @@ func (t JSONTomates) Push(args io.Reader) (io.Reader, error) {
 
 // Unshift reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Unshift(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Unshift(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -158,7 +160,7 @@ func (t JSONTomates) Unshift(args io.Reader) (io.Reader, error) {
 
 // Pop reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Pop(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Pop(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -180,7 +182,7 @@ func (t JSONTomates) Pop(args io.Reader) (io.Reader, error) {
 
 // Shift reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Shift(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Shift(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -202,7 +204,7 @@ func (t JSONTomates) Shift(args io.Reader) (io.Reader, error) {
 
 // Index reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Index(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Index(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -231,7 +233,7 @@ func (t JSONTomates) Index(args io.Reader) (io.Reader, error) {
 
 // RemoveAt reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) RemoveAt(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) RemoveAt(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -260,7 +262,7 @@ func (t JSONTomates) RemoveAt(args io.Reader) (io.Reader, error) {
 
 // Remove reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Remove(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Remove(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -289,7 +291,7 @@ func (t JSONTomates) Remove(args io.Reader) (io.Reader, error) {
 
 // InsertAt reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) InsertAt(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) InsertAt(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -319,7 +321,7 @@ func (t JSONTomates) InsertAt(args io.Reader) (io.Reader, error) {
 
 // Splice reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Splice(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Splice(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -350,7 +352,7 @@ func (t JSONTomates) Splice(args io.Reader) (io.Reader, error) {
 
 // Slice reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Slice(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Slice(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -380,7 +382,7 @@ func (t JSONTomates) Slice(args io.Reader) (io.Reader, error) {
 
 // Reverse reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Reverse(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Reverse(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -402,7 +404,7 @@ func (t JSONTomates) Reverse(args io.Reader) (io.Reader, error) {
 
 // Len reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Len(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Len(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
@@ -424,7 +426,7 @@ func (t JSONTomates) Len(args io.Reader) (io.Reader, error) {
 
 // Set reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t JSONTomates) Set(args io.Reader) (io.Reader, error) {
+func (t *JSONTomates) Set(args io.Reader) (io.Reader, error) {
 
 	var ret io.Reader
 	var retErr error
