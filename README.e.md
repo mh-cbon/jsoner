@@ -28,7 +28,7 @@ jsoner tomate_gen.go Tomate:MyTomate
 ```
 # API example
 
-Following example demonstates a program using it to generate a channeled version of a type.
+Following example demonstates a program using it to generate a jsoned version of a type.
 
 #### > {{cat "demo/lib.go" | color "go"}}
 
