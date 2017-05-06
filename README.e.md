@@ -26,6 +26,7 @@ s/Choose your gun!/[Aux armes!](https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7)
 # Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 ```
+
 # API example
 
 Following example demonstates a program using it to generate a jsoned version of a type.

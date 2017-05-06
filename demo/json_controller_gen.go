@@ -54,19 +54,43 @@ func (t *JSONController) GetByID(args io.Reader) (io.Reader, error) {
 
 // UpdateByID reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t *JSONController) UpdateByID(id int, reqBody io.Reader) (io.Reader, error) {
+func (t *JSONController) UpdateByID(args io.Reader) (io.Reader, error) {
+
 	var ret io.Reader
 	var retErr error
 
-	var decBody Tomate
-	decErr := json.NewDecoder(reqBody).Decode(&decBody)
+	input := struct {
+		id      int
+		reqBody Tomate
+	}{}
+	decErr := json.NewDecoder(args).Decode(&input)
 	if decErr != nil {
 		return nil, decErr
 	}
-
-	retVar1 := t.embed.UpdateByID(id, decBody)
+	retVar1 := t.embed.UpdateByID(input.id, input.reqBody)
 
 	out, encErr := json.Marshal([]interface{}{retVar1})
+	if encErr != nil {
+		retErr = encErr
+	} else {
+		var b bytes.Buffer
+		b.Write(out)
+		ret = &b
+	}
+
+	return ret, retErr
+
+}
+
+// DeleteByID reads json, outputs json.
+// the json input must provide a key/value for each params.
+func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
+	var ret io.Reader
+	var retErr error
+
+	retVar2 := t.embed.DeleteByID(reqID)
+
+	out, encErr := json.Marshal([]interface{}{retVar2})
 	if encErr != nil {
 		retErr = encErr
 	} else {

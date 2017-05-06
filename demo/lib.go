@@ -1,5 +1,8 @@
 package demo
 
+//go:generate lister vegetables_gen.go Tomate:Tomates
+//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates
+
 // Tomate if the resource subject.
 type Tomate struct {
 	Name string
@@ -10,8 +13,7 @@ func (t Tomate) GetID() string {
 	return t.Name
 }
 
-//go:generate lister vegetables_gen.go Tomate:Tomates
-//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates
+//go:generate jsoner json_controller_gen.go *Controller:JSONController
 
 // Controller of some resources.
 type Controller struct {
@@ -27,4 +29,7 @@ func (t Controller) UpdateByID(id int, reqBody Tomate) Tomate {
 	return Tomate{}
 }
 
-//go:generate jsoner json_controller_gen.go *Controller:JSONController
+// DeleteByID ...
+func (t *Controller) DeleteByID(reqID int) bool {
+	return false
+}

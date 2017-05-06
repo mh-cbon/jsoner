@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"go/ast"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -144,8 +143,6 @@ func New%v(embed %v) %v {
 
 	for _, m := range foundMethods[srcConcrete] {
 
-		todo := true
-
 		methodName := astutil.MethodName(m)
 		params := astutil.MethodParams(m)
 		paramNames := astutil.MethodParamNames(m)
@@ -157,27 +154,11 @@ func New%v(embed %v) %v {
 
 		// verify that the method does not take unserializable arguments.
 		// todo: improve marshaller support detection.
-
-		for _, p := range strings.Split(params, ",") {
-			p = strings.TrimSpace(p)
-			if len(p) > 0 {
-				p = strings.Join(strings.Split(p, " ")[1:], " ") // get the type
-				p = strings.TrimSpace(p)
-				if strings.Index(p, "func") > -1 {
-					todo = false // if its a param of type func
-					break
-				} else if strings.Index(p, "chan") > -1 {
-					todo = false // if its a param of type chan
-					break
-				}
-			}
-		}
-
-		if todo == false {
+		if !isMarshable(params) {
 			break
 		}
 
-		if strings.Index(params, "reqBody") == -1 {
+		if !isUsingConvetionnedParams(params) {
 			// the method params does not use
 			// conventionned params names,
 			// the parameters must be decoded from the
@@ -252,14 +233,14 @@ func New%v(embed %v) %v {
 		} else {
 			// the method params uses
 			// conventionned params names,
-			// the req body should be decoded according to this params,
+			// the req body should be decoded according to reqBody param,
 			// other parameters are to be received/forwarded regularly.
 
-			// the reqBody params type is set to some concrete type for the end user,
+			// the reqBody param type is set to some concrete type by the end user,
 			// jsoner should decode the request body to that concrete type.
-			// so, first thing to do is to set the type of the reqBody of the new
-			// method to io.Reader, this is what a protocol implementation d probably provide.
 
+			// set the type of the reqBody of the new method to io.Reader,
+			// this is what a protocol implementation d probably provide.
 			targetType := ""
 			lParams := strings.Split(params, ",")
 			for i, p := range lParams {
@@ -269,8 +250,10 @@ func New%v(embed %v) %v {
 					targetType = strings.Split(p, " ")[1]
 				}
 			}
+
 			newParams := strings.Join(lParams, ",")
 
+			// build a new list of param invokation where the input reqBody is replaced by decBody
 			lParamNames := strings.Split(paramNames, ",")
 			for i, p := range lParamNames {
 				p = strings.TrimSpace(p)
@@ -280,19 +263,22 @@ func New%v(embed %v) %v {
 			}
 			newParamNames := strings.Join(lParamNames, ",")
 
-			amp := "" // & ?
-			if targetType[0] != '*' && targetType[0] != '[' {
-				amp = "&"
+			// decode the reqBody into decBody
+			bodyDec := ""
+			if targetType != "" {
+				amp := "" // & ?
+				if len(targetType) > 0 && targetType[0] != '*' && targetType[0] != '[' {
+					amp = "&"
+				}
+				bodyDec = fmt.Sprintf(`
+	var decBody %v
+	decErr := json.NewDecoder(reqBody).Decode(%vdecBody)
+	if decErr != nil {
+		return nil, decErr
+	}`, targetType, amp)
 			}
-			bodyDec := fmt.Sprintf(`
-var decBody %v
-decErr := json.NewDecoder(reqBody).Decode(%vdecBody)
-if decErr != nil {
-	return nil, decErr
-}`, targetType, amp)
 
-			log.Println(targetType)
-
+			// invoke the embeded method with the new params list.
 			methInvok := fmt.Sprintf(`
 			%v := t.embed.%v(%v)
 		`, sRetVars, methodName, newParamNames)
@@ -340,6 +326,43 @@ return ret, retErr`,
 	}
 
 	return b
+}
+
+func isUsingConvetionnedParams(params string) bool {
+	lParams := strings.Split(params, ",")
+	prefixes := []string{"url", "get", "req", "post", "cookie", "route"}
+	for _, param := range lParams {
+		k := strings.Split(param, " ")
+		varName := strings.TrimSpace(k[0])
+		if varName == "reqBody" {
+			return true
+		}
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(varName, prefix) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isMarshable(params string) bool {
+	ret := true
+	for _, p := range strings.Split(params, ",") {
+		p = strings.TrimSpace(p)
+		if len(p) > 0 {
+			p = strings.Join(strings.Split(p, " ")[1:], " ") // get the type
+			p = strings.TrimSpace(p)
+			if strings.Index(p, "func") > -1 {
+				ret = false // if its a param of type func
+				break
+			} else if strings.Index(p, "chan") > -1 {
+				ret = false // if its a param of type chan
+				break
+			}
+		}
+	}
+	return ret
 }
 
 func getPkgToLoad() string {
