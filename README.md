@@ -51,6 +51,7 @@ Usage
 # Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 ```
+
 # API example
 
 Following example demonstates a program using it to generate a jsoned version of a type.
@@ -58,6 +59,9 @@ Following example demonstates a program using it to generate a jsoned version of
 #### > demo/lib.go
 ```go
 package demo
+
+//go:generate lister vegetables_gen.go Tomate:Tomates
+//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates
 
 // Tomate if the resource subject.
 type Tomate struct {
@@ -69,8 +73,7 @@ func (t Tomate) GetID() string {
 	return t.Name
 }
 
-//go:generate lister vegetables_gen.go Tomate:Tomates
-//go:generate jsoner json_vegetables_gen.go *Tomates:JSONTomates
+//go:generate jsoner json_controller_gen.go *Controller:JSONController
 
 // Controller of some resources.
 type Controller struct {
@@ -86,7 +89,10 @@ func (t Controller) UpdateByID(id int, reqBody Tomate) Tomate {
 	return Tomate{}
 }
 
-//go:generate jsoner json_controller_gen.go *Controller:JSONController
+// DeleteByID ...
+func (t *Controller) DeleteByID(reqID int) bool {
+	return false
+}
 ```
 
 Following code is the generated implementation of a typed slice of `Tomate`.
@@ -612,19 +618,43 @@ func (t *JSONController) GetByID(args io.Reader) (io.Reader, error) {
 
 // UpdateByID reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t *JSONController) UpdateByID(id int, reqBody io.Reader) (io.Reader, error) {
+func (t *JSONController) UpdateByID(args io.Reader) (io.Reader, error) {
+
 	var ret io.Reader
 	var retErr error
 
-	var decBody Tomate
-	decErr := json.NewDecoder(reqBody).Decode(&decBody)
+	input := struct {
+		id      int
+		reqBody Tomate
+	}{}
+	decErr := json.NewDecoder(args).Decode(&input)
 	if decErr != nil {
 		return nil, decErr
 	}
-
-	retVar1 := t.embed.UpdateByID(id, decBody)
+	retVar1 := t.embed.UpdateByID(input.id, input.reqBody)
 
 	out, encErr := json.Marshal([]interface{}{retVar1})
+	if encErr != nil {
+		retErr = encErr
+	} else {
+		var b bytes.Buffer
+		b.Write(out)
+		ret = &b
+	}
+
+	return ret, retErr
+
+}
+
+// DeleteByID reads json, outputs json.
+// the json input must provide a key/value for each params.
+func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
+	var ret io.Reader
+	var retErr error
+
+	retVar2 := t.embed.DeleteByID(reqID)
+
+	out, encErr := json.Marshal([]interface{}{retVar2})
 	if encErr != nil {
 		retErr = encErr
 	} else {
