@@ -23,7 +23,7 @@ Choose your gun! | [Aux armes!](https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7)
 ## Cli examples
 
 ```sh
-# Create a channeled version of Tomate to MyTomate
+# Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 ```
 # API example
@@ -35,6 +35,20 @@ Following example demonstates a program using it to generate a jsoned version of
 Following code is the generated implementation of a typed slice of `Tomate`.
 
 #### > {{cat "demo/json_vegetables_gen.go" | color "go"}}
+
+Following code is the generated implementation of a jsoner `Controller` that uses conventionend variable name.
+
+#### > {{cat "demo/json_controller_gen.go" | color "go"}}
+
+#### Conventionned variable name
+
+`jsoner` reads and interprets input params to determine where/how the request body should be decoded.
+
+In that matters it looks up for variable named `reqBody`,
+if such variable is found, then the body is decoded according to its type.
+Other parameters are passed/received untouched.
+
+If such variable is not found, it is assumed that all parameters are to be decoded from the request body.
 
 # Recipes
 
