@@ -83,8 +83,10 @@ func main() {
 	fmt.Fprintf(dest, "	%q\n", "bytes")
 	fmt.Fprintf(dest, "	%q\n", "encoding/json")
 	fmt.Fprintf(dest, "	%q\n", "io")
-	fmt.Fprintf(dest, ")\n")
+	fmt.Fprintf(dest, "	%q\n", "net/http")
 
+	var tBuf bytes.Buffer
+	var extraImports []string
 	for _, todo := range restargs {
 		y := strings.Split(todo, ":")
 		if len(y) != 2 {
@@ -93,9 +95,28 @@ func main() {
 		srcName := y[0]
 		destName := y[1]
 
-		res := processType(destName, srcName, foundMethods)
-		io.Copy(dest, &res)
+		Imports, res := processType(destName, srcName, foundMethods)
+		io.Copy(&tBuf, &res)
+		extraImports = append(extraImports, Imports...)
 	}
+
+	// add extra imports
+	for _, i := range extraImports {
+		importPath := astutil.GetImportPath(prog, i)
+		if !(importPath == "bytes" ||
+			importPath == "encoding/json" ||
+			importPath == "net/http" ||
+			importPath == "io") {
+			if importPath == "" || strings.HasSuffix(importPath, i) {
+				fmt.Fprintf(dest, "	%q\n", importPath)
+			} else {
+				fmt.Fprintf(dest, " %v	%q\n", i, importPath)
+			}
+		}
+	}
+
+	fmt.Fprintf(dest, ")\n")
+	io.Copy(dest, &tBuf)
 }
 
 func showVer() {
@@ -114,8 +135,9 @@ func showHelp() {
 	fmt.Println()
 }
 
-func processType(destName, srcName string, foundMethods map[string][]*ast.FuncDecl) bytes.Buffer {
+func processType(destName, srcName string, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
 
+	extraImports := []string{}
 	var b bytes.Buffer
 	dest := &b
 
@@ -129,7 +151,10 @@ type %v struct{
 	srcConcrete := astutil.GetUnpointedType(srcName)
 	dstStar := astutil.GetPointedType(destName)
 	dstConcrete := astutil.GetUnpointedType(destName)
+	hasHandleError := methodsContains(srcName, "HandleError", foundMethods)
+	hasHandleSuccess := methodsContains(srcName, "HandleSuccess", foundMethods)
 
+	// Make the constructor
 	fmt.Fprintf(dest, `// New%v constructs a jsoner of %v
 func New%v(embed %v) %v {
 	ret := &%v{
@@ -141,6 +166,43 @@ func New%v(embed %v) %v {
 		dstConcrete, srcName, dstConcrete, srcName, dstStar, dstConcrete)
 	fmt.Fprintln(dest)
 
+	// Add an error handler method
+	if hasHandleError {
+		fmt.Fprintf(dest, `// HandleError calls for embed.HandleError method.
+func (t %v) HandleError(err error, w http.ResponseWriter, r *http.Request)bool{
+	if err == nil {
+		return false
+	}
+		return t.embed.HandleError(err, w, r)
+}
+`,
+			dstStar)
+	}
+
+	// Add a success handler method
+	if hasHandleSuccess {
+		fmt.Fprintf(dest, `// HandleSuccess calls for embed.HandleSuccess method.
+func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
+	return t.embed.HandleSuccess(w, r)
+}
+`,
+			dstStar)
+
+	} else {
+		fmt.Fprintf(dest, `// HandleSuccess prints http 200 and prints r.
+func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
+	if x, ok := w.(http.ResponseWriter); ok {
+		x.WriteHeader(http.StatusOK)
+		x.Header().Set("Content-Type", "application/json")
+	}
+	_, err := io.Copy(w, r)
+	return err
+}
+`,
+			dstStar)
+	}
+	fmt.Fprintln(dest)
+
 	for _, m := range foundMethods[srcConcrete] {
 
 		methodName := astutil.MethodName(m)
@@ -150,7 +212,21 @@ func New%v(embed %v) %v {
 		sRetVars := strings.Join(retVars, ", ")
 		hasErr := astutil.MethodReturnError(m)
 		structProps := astutil.MethodParamsToProps(m)
+
+		importIDs := astutil.GetSignatureImportIdentifiers(m)
+		extraImports = append(extraImports, importIDs...)
 		// receiverName := astutil.ReceiverName(m)
+
+		// ensure it is desired to facade this method.
+		if astutil.IsExported(methodName) == false {
+			continue
+		}
+		if methodName == "HandleError" {
+			continue
+		}
+		if methodName == "HandleSuccess" {
+			continue
+		}
 
 		// verify that the method does not take unserializable arguments.
 		// todo: improve marshaller support detection.
@@ -164,8 +240,13 @@ func New%v(embed %v) %v {
 			// the parameters must be decoded from the
 			// req body, and applied to the method.
 			methInvok := fmt.Sprintf(`
-			%v := t.embed.%v()
-			`, sRetVars, methodName)
+				%v := t.embed.%v()
+				`, sRetVars, methodName)
+			if strings.TrimSpace(sRetVars) == "" {
+				methInvok = fmt.Sprintf(`
+					%v := t.embed.%v()
+					`, sRetVars, methodName)
+			}
 
 			if params != "" {
 				inputParams := "input." + strings.Join(strings.Split(paramNames, ","), ", input.")
@@ -186,12 +267,20 @@ func New%v(embed %v) %v {
 				input := struct{
 					%v
 				}{}
-				decErr := json.NewDecoder(args).Decode(&input)
+				decErr := json.NewDecoder(r.Body).Decode(&input)
 				if decErr != nil {
 					return nil, decErr
 				}
+			`, structProps)
+				if sRetVars == "" {
+					methInvok += fmt.Sprintf(`
+				t.embed.%v(%v)
+				`, methodName, inputParams)
+				} else {
+					methInvok += fmt.Sprintf(`
 				%v := t.embed.%v(%v)
-			`, structProps, sRetVars, methodName, inputParams)
+				`, sRetVars, methodName, inputParams)
+				}
 			}
 
 			errHandling := ""
@@ -212,9 +301,12 @@ func New%v(embed %v) %v {
 					ret = &b
 				}
 					`, sRetVars)
+			if sRetVars == "" {
+				outHandling = ""
+			}
 
 			body := fmt.Sprintf(`
-			var ret io.Reader
+			ret := new(bytes.Buffer)
 			var retErr error
 			%v
 			%v
@@ -224,7 +316,7 @@ func New%v(embed %v) %v {
 
 			fmt.Fprintf(dest, `// %v reads json, outputs json.
 			// the json input must provide a key/value for each params.
-			func (t %v) %v(args io.Reader) (io.Reader, error) {
+			func (t %v) %v(r *http.Request) (io.Reader, error) {
 				%v
 			}`,
 				methodName, dstStar, methodName, body)
@@ -283,6 +375,12 @@ func New%v(embed %v) %v {
 			%v := t.embed.%v(%v)
 		`, sRetVars, methodName, newParamNames)
 
+			if strings.TrimSpace(sRetVars) == "" {
+				methInvok = fmt.Sprintf(`
+				t.embed.%v(%v)
+			`, methodName, newParamNames)
+			}
+
 			errHandling := ""
 			if hasErr {
 				errName := retVars[len(retVars)-1]
@@ -301,6 +399,9 @@ func New%v(embed %v) %v {
 						ret = &b
 					}
 						`, sRetVars)
+			if sRetVars == "" {
+				outHandling = ""
+			}
 
 			body := fmt.Sprintf(`%v
 %v
@@ -308,7 +409,7 @@ func New%v(embed %v) %v {
 %v
 `, bodyDec, methInvok, errHandling, outHandling)
 
-			body = fmt.Sprintf(`var ret io.Reader
+			body = fmt.Sprintf(`ret := new(bytes.Buffer)
 var retErr error
 %v
 return ret, retErr`,
@@ -325,20 +426,57 @@ return ret, retErr`,
 
 	}
 
-	return b
+	return extraImports, b
 }
+
+var prefixes = []string{"url", "get", "req", "post", "cookie", "route"}
 
 func isUsingConvetionnedParams(params string) bool {
 	lParams := strings.Split(params, ",")
-	prefixes := []string{"url", "get", "req", "post", "cookie", "route"}
 	for _, param := range lParams {
 		k := strings.Split(param, " ")
 		varName := strings.TrimSpace(k[0])
-		if varName == "reqBody" {
+		if isConvetionnedParam(varName) {
 			return true
 		}
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(varName, prefix) {
+		if len(k) > 1 {
+			varType := strings.TrimSpace(k[1])
+			if varType == "http.ResponseWriter" {
+				return true
+
+			} else if varType == "*http.Request" {
+				return true
+
+			} else if varType == "httper.Cookier" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+var reqBodyVarName = "reqBody"
+
+func isConvetionnedParam(varName string) bool {
+	if varName == reqBodyVarName {
+		return true //required case ?
+	}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(varName, strings.ToLower(prefix)) {
+			f := string(varName[len(prefix):][0])
+			return f == strings.ToUpper(f)
+		} else if strings.HasPrefix(varName, strings.ToUpper(prefix)) {
+			f := string(varName[len(prefix):][0])
+			return f == strings.ToLower(f)
+		}
+	}
+	return false
+}
+
+func methodsContains(typeName, search string, methods map[string][]*ast.FuncDecl) bool {
+	if funList, ok := methods[typeName]; ok {
+		for _, fun := range funList {
+			if astutil.MethodName(fun) == search {
 				return true
 			}
 		}

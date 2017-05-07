@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"net/http"
 )
 
 // JSONController is jsoner of *Controller.
@@ -23,20 +24,31 @@ func NewJSONController(embed *Controller) *JSONController {
 	return ret
 }
 
+// HandleSuccess prints http 200 and prints r.
+func (t *JSONController) HandleSuccess(w io.Writer, r io.Reader) error {
+	if x, ok := w.(http.ResponseWriter); ok {
+		x.WriteHeader(http.StatusOK)
+		x.Header().Set("Content-Type", "application/json")
+	}
+	_, err := io.Copy(w, r)
+	return err
+}
+
 // GetByID reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t *JSONController) GetByID(args io.Reader) (io.Reader, error) {
+func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
-	var ret io.Reader
+	ret := new(bytes.Buffer)
 	var retErr error
 
 	input := struct {
 		id int
 	}{}
-	decErr := json.NewDecoder(args).Decode(&input)
+	decErr := json.NewDecoder(r.Body).Decode(&input)
 	if decErr != nil {
 		return nil, decErr
 	}
+
 	retVar0 := t.embed.GetByID(input.id)
 
 	out, encErr := json.Marshal([]interface{}{retVar0})
@@ -54,20 +66,17 @@ func (t *JSONController) GetByID(args io.Reader) (io.Reader, error) {
 
 // UpdateByID reads json, outputs json.
 // the json input must provide a key/value for each params.
-func (t *JSONController) UpdateByID(args io.Reader) (io.Reader, error) {
-
-	var ret io.Reader
+func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
+	ret := new(bytes.Buffer)
 	var retErr error
 
-	input := struct {
-		id      int
-		reqBody Tomate
-	}{}
-	decErr := json.NewDecoder(args).Decode(&input)
+	var decBody Tomate
+	decErr := json.NewDecoder(reqBody).Decode(&decBody)
 	if decErr != nil {
 		return nil, decErr
 	}
-	retVar1 := t.embed.UpdateByID(input.id, input.reqBody)
+
+	retVar1 := t.embed.UpdateByID(GETid, decBody)
 
 	out, encErr := json.Marshal([]interface{}{retVar1})
 	if encErr != nil {
@@ -79,13 +88,12 @@ func (t *JSONController) UpdateByID(args io.Reader) (io.Reader, error) {
 	}
 
 	return ret, retErr
-
 }
 
 // DeleteByID reads json, outputs json.
 // the json input must provide a key/value for each params.
 func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
-	var ret io.Reader
+	ret := new(bytes.Buffer)
 	var retErr error
 
 	retVar2 := t.embed.DeleteByID(reqID)

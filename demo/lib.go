@@ -25,7 +25,7 @@ func (t Controller) GetByID(id int) Tomate {
 }
 
 // UpdateByID ...
-func (t Controller) UpdateByID(id int, reqBody Tomate) Tomate {
+func (t Controller) UpdateByID(GETid int, reqBody Tomate) Tomate {
 	return Tomate{}
 }
 
