@@ -183,8 +183,7 @@ func New%v(embed %v) %v {
 	}
   return ret
 }
-`,
-		dstConcrete, srcName, dstConcrete, srcName, dstStar, dstConcrete)
+`, dstConcrete, srcName, dstConcrete, srcName, dstStar, dstConcrete)
 	fmt.Fprintln(dest)
 
 	// Add an error handler method
@@ -196,8 +195,7 @@ func (t %v) HandleError(err error, w http.ResponseWriter, r *http.Request)bool{
 	}
 		return t.embed.HandleError(err, w, r)
 }
-`,
-			dstStar)
+`, dstStar)
 	}
 
 	// Add a success handler method
@@ -206,8 +204,7 @@ func (t %v) HandleError(err error, w http.ResponseWriter, r *http.Request)bool{
 func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 	return t.embed.HandleSuccess(w, r)
 }
-`,
-			dstStar)
+`, dstStar)
 
 	} else {
 		fmt.Fprintf(dest, `// HandleSuccess prints http 200 and prints r.
@@ -219,8 +216,7 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 	_, err := io.Copy(w, r)
 	return err
 }
-`,
-			dstStar)
+`, dstStar)
 	}
 	fmt.Fprintln(dest)
 
