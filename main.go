@@ -156,7 +156,6 @@ func processType(mode, destName, srcName string, prog *loader.Program, pkg *load
 
 	srcConcrete := astutil.GetUnpointedType(srcName)
 
-	// the json input must provide a key/value for each params.
 	structType := astutil.FindStruct(pkg, srcConcrete)
 	structComment := astutil.GetComment(prog, structType.Pos())
 	// todo: might do better to send only annotations or do other improvemenets.
