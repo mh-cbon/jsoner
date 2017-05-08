@@ -43,6 +43,7 @@ Usage
 	out:   Output destination of the results, use '-' for stdout.
 	types: A list of types such as src:dst.
 	-p:    The name of the package output.
+	-mode: The mode of generation to apply: std|gorilla (defaults to std).
 ```
 
 ## Cli examples
