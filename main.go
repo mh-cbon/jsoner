@@ -157,12 +157,12 @@ func processType(mode, destName, srcName string, prog *loader.Program, pkg *load
 	structComment = makeCommentLines(structComment)
 
 	fmt.Fprintf(dest, `
-%v.
 // %v is jsoner of %v.
+%v
 type %v struct{
 	embed %v
 }
-		`, structComment, destName, srcName, destName, srcName)
+		`, destName, srcName, structComment, destName, srcName)
 
 	dstStar := astutil.GetPointedType(destName)
 	dstConcrete := astutil.GetUnpointedType(destName)
@@ -331,11 +331,11 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 			return ret, retErr
 			`, methInvok, errHandling, outHandling)
 
-			fmt.Fprintf(dest, `%v
-			// Decodes r as json to invoke %v.%v.
+			fmt.Fprintf(dest, `// Decodes r as json to invoke %v.%v.
+			%v
 			func (t %v) %v(r *http.Request) (io.Reader, error) {
 				%v
-			}`, comment, srcName, methodName, dstStar, methodName, body)
+			}`, srcName, methodName, comment, dstStar, methodName, body)
 			fmt.Fprintln(dest)
 
 		} else {
@@ -431,12 +431,12 @@ var retErr error
 return ret, retErr`,
 				body)
 
-			fmt.Fprintf(dest, `%v
-			// Decodes reqBody as json to invoke %v.%v.
+			fmt.Fprintf(dest, `// Decodes reqBody as json to invoke %v.%v.
 			// Other parameters are passed straight
+			%v
 						func (t %v) %v(%v) (io.Reader, error) {
 							%v
-						}`, comment, srcName, methodName, dstStar, methodName, newParams, body)
+						}`, srcName, methodName, comment, dstStar, methodName, newParams, body)
 			fmt.Fprintln(dest)
 		}
 
@@ -451,7 +451,11 @@ func makeCommentLines(s string) string {
 	for _, k := range strings.Split(s, "\n") {
 		comment += "// " + k + "\n"
 	}
-	return strings.TrimSpace(comment)
+	comment = strings.TrimSpace(comment)
+	if comment == "" {
+		comment = "//"
+	}
+	return comment
 }
 
 var gorillaMode = "gorilla"

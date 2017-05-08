@@ -11,8 +11,8 @@ import (
 	"net/http"
 )
 
-// Controller of some resources..
 // JSONController is jsoner of *Controller.
+// Controller of some resources.
 type JSONController struct {
 	embed *Controller
 }
@@ -35,8 +35,8 @@ func (t *JSONController) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// GetByID ...
 // Decodes r as json to invoke *Controller.GetByID.
+// GetByID ...
 func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -65,9 +65,9 @@ func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// UpdateByID ...
 // Decodes reqBody as json to invoke *Controller.UpdateByID.
 // Other parameters are passed straight
+// UpdateByID ...
 func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
 	ret := new(bytes.Buffer)
 	var retErr error
@@ -92,9 +92,9 @@ func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, er
 	return ret, retErr
 }
 
-// DeleteByID ...
 // Decodes reqBody as json to invoke *Controller.DeleteByID.
 // Other parameters are passed straight
+// DeleteByID ...
 func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
 	ret := new(bytes.Buffer)
 	var retErr error
