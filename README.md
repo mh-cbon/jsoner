@@ -113,6 +113,7 @@ import (
 	"net/http"
 )
 
+// Tomates implements a typed slice of Tomate.
 // JSONTomates is jsoner of *Tomates.
 type JSONTomates struct {
 	embed *Tomates
@@ -136,8 +137,8 @@ func (t *JSONTomates) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// Push reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Push appends every Tomate
+// Decodes r as json to invoke *Tomates.Push.
 func (t *JSONTomates) Push(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -166,8 +167,8 @@ func (t *JSONTomates) Push(r *http.Request) (io.Reader, error) {
 
 }
 
-// Unshift reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Unshift prepends every Tomate
+// Decodes r as json to invoke *Tomates.Unshift.
 func (t *JSONTomates) Unshift(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -196,8 +197,8 @@ func (t *JSONTomates) Unshift(r *http.Request) (io.Reader, error) {
 
 }
 
-// Pop reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Pop removes then returns the last Tomate.
+// Decodes r as json to invoke *Tomates.Pop.
 func (t *JSONTomates) Pop(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -218,8 +219,8 @@ func (t *JSONTomates) Pop(r *http.Request) (io.Reader, error) {
 
 }
 
-// Shift reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Shift removes then returns the first Tomate.
+// Decodes r as json to invoke *Tomates.Shift.
 func (t *JSONTomates) Shift(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -240,8 +241,8 @@ func (t *JSONTomates) Shift(r *http.Request) (io.Reader, error) {
 
 }
 
-// Index reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Index of given Tomate. It must implements Ider interface.
+// Decodes r as json to invoke *Tomates.Index.
 func (t *JSONTomates) Index(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -270,8 +271,8 @@ func (t *JSONTomates) Index(r *http.Request) (io.Reader, error) {
 
 }
 
-// Contains reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Contains returns true if s in is t.
+// Decodes r as json to invoke *Tomates.Contains.
 func (t *JSONTomates) Contains(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -300,8 +301,8 @@ func (t *JSONTomates) Contains(r *http.Request) (io.Reader, error) {
 
 }
 
-// RemoveAt reads json, outputs json.
-// the json input must provide a key/value for each params.
+// RemoveAt removes a Tomate at index i.
+// Decodes r as json to invoke *Tomates.RemoveAt.
 func (t *JSONTomates) RemoveAt(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -330,8 +331,8 @@ func (t *JSONTomates) RemoveAt(r *http.Request) (io.Reader, error) {
 
 }
 
-// Remove reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Remove removes given Tomate
+// Decodes r as json to invoke *Tomates.Remove.
 func (t *JSONTomates) Remove(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -360,8 +361,8 @@ func (t *JSONTomates) Remove(r *http.Request) (io.Reader, error) {
 
 }
 
-// InsertAt reads json, outputs json.
-// the json input must provide a key/value for each params.
+// InsertAt adds given Tomate at index i
+// Decodes r as json to invoke *Tomates.InsertAt.
 func (t *JSONTomates) InsertAt(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -391,8 +392,9 @@ func (t *JSONTomates) InsertAt(r *http.Request) (io.Reader, error) {
 
 }
 
-// Splice reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Splice removes and returns a slice of Tomate, starting at start, ending at start+length.
+// If any s is provided, they are inserted in place of the removed slice.
+// Decodes r as json to invoke *Tomates.Splice.
 func (t *JSONTomates) Splice(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -423,8 +425,8 @@ func (t *JSONTomates) Splice(r *http.Request) (io.Reader, error) {
 
 }
 
-// Slice reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Slice returns a copied slice of Tomate, starting at start, ending at start+length.
+// Decodes r as json to invoke *Tomates.Slice.
 func (t *JSONTomates) Slice(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -454,8 +456,8 @@ func (t *JSONTomates) Slice(r *http.Request) (io.Reader, error) {
 
 }
 
-// Reverse reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Reverse the slice.
+// Decodes r as json to invoke *Tomates.Reverse.
 func (t *JSONTomates) Reverse(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -476,8 +478,8 @@ func (t *JSONTomates) Reverse(r *http.Request) (io.Reader, error) {
 
 }
 
-// Len reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Len of the slice.
+// Decodes r as json to invoke *Tomates.Len.
 func (t *JSONTomates) Len(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -498,8 +500,8 @@ func (t *JSONTomates) Len(r *http.Request) (io.Reader, error) {
 
 }
 
-// Set reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Set the slice.
+// Decodes r as json to invoke *Tomates.Set.
 func (t *JSONTomates) Set(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -528,8 +530,8 @@ func (t *JSONTomates) Set(r *http.Request) (io.Reader, error) {
 
 }
 
-// Get reads json, outputs json.
-// the json input must provide a key/value for each params.
+// Get the slice.
+// Decodes r as json to invoke *Tomates.Get.
 func (t *JSONTomates) Get(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -550,8 +552,8 @@ func (t *JSONTomates) Get(r *http.Request) (io.Reader, error) {
 
 }
 
-// At reads json, outputs json.
-// the json input must provide a key/value for each params.
+// At return the item at index i.
+// Decodes r as json to invoke *Tomates.At.
 func (t *JSONTomates) At(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -598,6 +600,7 @@ import (
 	"net/http"
 )
 
+// Controller of some resources..
 // JSONController is jsoner of *Controller.
 type JSONController struct {
 	embed *Controller
@@ -621,8 +624,8 @@ func (t *JSONController) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// GetByID reads json, outputs json.
-// the json input must provide a key/value for each params.
+// GetByID ...
+// Decodes r as json to invoke *Controller.GetByID.
 func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
@@ -651,8 +654,9 @@ func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// UpdateByID reads json, outputs json.
-// the json input must provide a key/value for each params.
+// UpdateByID ...
+// Decodes reqBody as json to invoke *Controller.UpdateByID.
+// Other parameters are passed straight
 func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
 	ret := new(bytes.Buffer)
 	var retErr error
@@ -677,8 +681,9 @@ func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, er
 	return ret, retErr
 }
 
-// DeleteByID reads json, outputs json.
-// the json input must provide a key/value for each params.
+// DeleteByID ...
+// Decodes reqBody as json to invoke *Controller.DeleteByID.
+// Other parameters are passed straight
 func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
 	ret := new(bytes.Buffer)
 	var retErr error
