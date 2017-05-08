@@ -93,15 +93,9 @@ func main() {
 
 	var tBuf bytes.Buffer
 	var extraImports []string
-	for _, todo := range restargs {
-		y := strings.Split(todo, ":")
-		if len(y) != 2 {
-			panic("wrong name " + todo)
-		}
-		srcName := y[0]
-		destName := y[1]
-
-		Imports, res := processType(mode, destName, srcName, prog, pkg, foundMethods)
+	todos := checkArgs(restargs)
+	for _, todo := range todos {
+		Imports, res := processType(mode, todo[1], todo[0], prog, pkg, foundMethods)
 		io.Copy(&tBuf, &res)
 		extraImports = append(extraImports, Imports...)
 	}
@@ -123,6 +117,18 @@ func main() {
 
 	fmt.Fprintf(dest, ")\n")
 	io.Copy(dest, &tBuf)
+}
+
+func checkArgs(args []string) [][]string {
+	ret := [][]string{}
+	for _, todo := range args {
+		y := strings.Split(todo, ":")
+		if len(y) != 2 {
+			panic("wrong name " + todo)
+		}
+		ret = append(ret, y)
+	}
+	return ret
 }
 
 func showVer() {
