@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/tools/go/loader"
+
 	"github.com/mh-cbon/astutil"
 	httper "github.com/mh-cbon/httper/lib"
 )
@@ -56,11 +58,12 @@ func main() {
 	o := args[0]
 	restargs := args[1:]
 
-	prog := astutil.GetProgram(pkgToLoad).Package(pkgToLoad)
+	prog := astutil.GetProgram(pkgToLoad)
+	pkg := prog.Package(pkgToLoad)
 	// astutil.PrintPkg(p)
 
-	// foundTypes := astutil.FindTypes(prog)
-	foundMethods := astutil.FindMethods(prog)
+	// foundTypes := astutil.FindTypes(pkg)
+	foundMethods := astutil.FindMethods(pkg)
 
 	if o != "-" {
 		f, err := os.Create(o)
@@ -98,14 +101,14 @@ func main() {
 		srcName := y[0]
 		destName := y[1]
 
-		Imports, res := processType(mode, destName, srcName, foundMethods)
+		Imports, res := processType(mode, destName, srcName, prog, pkg, foundMethods)
 		io.Copy(&tBuf, &res)
 		extraImports = append(extraImports, Imports...)
 	}
 
 	// add extra imports
 	for _, i := range extraImports {
-		importPath := astutil.GetImportPath(prog, i)
+		importPath := astutil.GetImportPath(pkg, i)
 		if !(importPath == "bytes" ||
 			importPath == "encoding/json" ||
 			importPath == "net/http" ||
@@ -139,20 +142,26 @@ func showHelp() {
 	fmt.Println()
 }
 
-func processType(mode, destName, srcName string, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
+func processType(mode, destName, srcName string, prog *loader.Program, pkg *loader.PackageInfo, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
 
 	extraImports := []string{}
 	var b bytes.Buffer
 	dest := &b
 
+	srcConcrete := astutil.GetUnpointedType(srcName)
+
+	// the json input must provide a key/value for each params.
+	structType := astutil.FindStruct(pkg, srcConcrete)
+	structComment := astutil.GetComment(prog, structType.Pos())
+	structComment = makeCommentLines(structComment)
 	fmt.Fprintf(dest, `
+%v.
 // %v is jsoner of %v.
 type %v struct{
 	embed %v
 }
-		`, destName, srcName, destName, srcName)
+		`, structComment, destName, srcName, destName, srcName)
 
-	srcConcrete := astutil.GetUnpointedType(srcName)
 	dstStar := astutil.GetPointedType(destName)
 	dstConcrete := astutil.GetUnpointedType(destName)
 	hasHandleError := methodsContains(srcName, "HandleError", foundMethods)
@@ -220,6 +229,8 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 		importIDs := astutil.GetSignatureImportIdentifiers(m)
 		extraImports = append(extraImports, importIDs...)
 		// receiverName := astutil.ReceiverName(m)
+		comment := astutil.GetComment(prog, m.Pos())
+		comment = makeCommentLines(comment)
 
 		// ensure it is desired to facade this method.
 		if astutil.IsExported(methodName) == false {
@@ -318,12 +329,11 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 			return ret, retErr
 			`, methInvok, errHandling, outHandling)
 
-			fmt.Fprintf(dest, `// %v reads json, outputs json.
-			// the json input must provide a key/value for each params.
+			fmt.Fprintf(dest, `%v
+			// Decodes r as json to invoke %v.%v.
 			func (t %v) %v(r *http.Request) (io.Reader, error) {
 				%v
-			}`,
-				methodName, dstStar, methodName, body)
+			}`, comment, srcName, methodName, dstStar, methodName, body)
 			fmt.Fprintln(dest)
 
 		} else {
@@ -419,18 +429,27 @@ var retErr error
 return ret, retErr`,
 				body)
 
-			fmt.Fprintf(dest, `// %v reads json, outputs json.
-						// the json input must provide a key/value for each params.
+			fmt.Fprintf(dest, `%v
+			// Decodes reqBody as json to invoke %v.%v.
+			// Other parameters are passed straight
 						func (t %v) %v(%v) (io.Reader, error) {
 							%v
-						}`,
-				methodName, dstStar, methodName, newParams, body)
+						}`, comment, srcName, methodName, dstStar, methodName, newParams, body)
 			fmt.Fprintln(dest)
 		}
 
 	}
 
 	return extraImports, b
+}
+
+func makeCommentLines(s string) string {
+	s = strings.TrimSpace(s)
+	comment := ""
+	for _, k := range strings.Split(s, "\n") {
+		comment += "// " + k + "\n"
+	}
+	return strings.TrimSpace(comment)
 }
 
 var gorillaMode = "gorilla"
