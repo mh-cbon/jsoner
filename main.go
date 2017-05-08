@@ -332,11 +332,11 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 			return ret, retErr
 			`, methInvok, errHandling, outHandling)
 
-			fmt.Fprintf(dest, `// Decodes r as json to invoke %v.%v.
+			fmt.Fprintf(dest, `// %v Decodes r as json to invoke %v.%v.
 			%v
 			func (t %v) %v(r *http.Request) (io.Reader, error) {
 				%v
-			}`, srcName, methodName, comment, dstStar, methodName, body)
+			}`, methodName, srcName, methodName, comment, dstStar, methodName, body)
 			fmt.Fprintln(dest)
 
 		} else {
@@ -432,12 +432,12 @@ var retErr error
 return ret, retErr`,
 				body)
 
-			fmt.Fprintf(dest, `// Decodes reqBody as json to invoke %v.%v.
+			fmt.Fprintf(dest, `// %v Decodes reqBody as json to invoke %v.%v.
 			// Other parameters are passed straight
 			%v
 						func (t %v) %v(%v) (io.Reader, error) {
 							%v
-						}`, srcName, methodName, comment, dstStar, methodName, newParams, body)
+						}`, methodName, srcName, methodName, comment, dstStar, methodName, newParams, body)
 			fmt.Fprintln(dest)
 		}
 

@@ -35,7 +35,7 @@ func (t *JSONController) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// Decodes r as json to invoke *Controller.GetByID.
+// GetByID Decodes r as json to invoke *Controller.GetByID.
 // GetByID ...
 func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
@@ -65,7 +65,7 @@ func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes reqBody as json to invoke *Controller.UpdateByID.
+// UpdateByID Decodes reqBody as json to invoke *Controller.UpdateByID.
 // Other parameters are passed straight
 // UpdateByID ...
 func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
@@ -92,7 +92,7 @@ func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, er
 	return ret, retErr
 }
 
-// Decodes reqBody as json to invoke *Controller.DeleteByID.
+// DeleteByID Decodes reqBody as json to invoke *Controller.DeleteByID.
 // Other parameters are passed straight
 // DeleteByID ...
 func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {

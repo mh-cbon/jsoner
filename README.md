@@ -137,7 +137,7 @@ func (t *JSONTomates) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// Decodes r as json to invoke *Tomates.Push.
+// Push Decodes r as json to invoke *Tomates.Push.
 // Push appends every Tomate
 func (t *JSONTomates) Push(r *http.Request) (io.Reader, error) {
 
@@ -167,7 +167,7 @@ func (t *JSONTomates) Push(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Unshift.
+// Unshift Decodes r as json to invoke *Tomates.Unshift.
 // Unshift prepends every Tomate
 func (t *JSONTomates) Unshift(r *http.Request) (io.Reader, error) {
 
@@ -197,7 +197,7 @@ func (t *JSONTomates) Unshift(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Pop.
+// Pop Decodes r as json to invoke *Tomates.Pop.
 // Pop removes then returns the last Tomate.
 func (t *JSONTomates) Pop(r *http.Request) (io.Reader, error) {
 
@@ -219,7 +219,7 @@ func (t *JSONTomates) Pop(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Shift.
+// Shift Decodes r as json to invoke *Tomates.Shift.
 // Shift removes then returns the first Tomate.
 func (t *JSONTomates) Shift(r *http.Request) (io.Reader, error) {
 
@@ -241,7 +241,7 @@ func (t *JSONTomates) Shift(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Index.
+// Index Decodes r as json to invoke *Tomates.Index.
 // Index of given Tomate. It must implements Ider interface.
 func (t *JSONTomates) Index(r *http.Request) (io.Reader, error) {
 
@@ -271,7 +271,7 @@ func (t *JSONTomates) Index(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Contains.
+// Contains Decodes r as json to invoke *Tomates.Contains.
 // Contains returns true if s in is t.
 func (t *JSONTomates) Contains(r *http.Request) (io.Reader, error) {
 
@@ -301,7 +301,7 @@ func (t *JSONTomates) Contains(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.RemoveAt.
+// RemoveAt Decodes r as json to invoke *Tomates.RemoveAt.
 // RemoveAt removes a Tomate at index i.
 func (t *JSONTomates) RemoveAt(r *http.Request) (io.Reader, error) {
 
@@ -331,7 +331,7 @@ func (t *JSONTomates) RemoveAt(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Remove.
+// Remove Decodes r as json to invoke *Tomates.Remove.
 // Remove removes given Tomate
 func (t *JSONTomates) Remove(r *http.Request) (io.Reader, error) {
 
@@ -361,7 +361,7 @@ func (t *JSONTomates) Remove(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.InsertAt.
+// InsertAt Decodes r as json to invoke *Tomates.InsertAt.
 // InsertAt adds given Tomate at index i
 func (t *JSONTomates) InsertAt(r *http.Request) (io.Reader, error) {
 
@@ -392,7 +392,7 @@ func (t *JSONTomates) InsertAt(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Splice.
+// Splice Decodes r as json to invoke *Tomates.Splice.
 // Splice removes and returns a slice of Tomate, starting at start, ending at start+length.
 // If any s is provided, they are inserted in place of the removed slice.
 func (t *JSONTomates) Splice(r *http.Request) (io.Reader, error) {
@@ -425,7 +425,7 @@ func (t *JSONTomates) Splice(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Slice.
+// Slice Decodes r as json to invoke *Tomates.Slice.
 // Slice returns a copied slice of Tomate, starting at start, ending at start+length.
 func (t *JSONTomates) Slice(r *http.Request) (io.Reader, error) {
 
@@ -456,7 +456,7 @@ func (t *JSONTomates) Slice(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Reverse.
+// Reverse Decodes r as json to invoke *Tomates.Reverse.
 // Reverse the slice.
 func (t *JSONTomates) Reverse(r *http.Request) (io.Reader, error) {
 
@@ -478,7 +478,7 @@ func (t *JSONTomates) Reverse(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Len.
+// Len Decodes r as json to invoke *Tomates.Len.
 // Len of the slice.
 func (t *JSONTomates) Len(r *http.Request) (io.Reader, error) {
 
@@ -500,7 +500,7 @@ func (t *JSONTomates) Len(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Set.
+// Set Decodes r as json to invoke *Tomates.Set.
 // Set the slice.
 func (t *JSONTomates) Set(r *http.Request) (io.Reader, error) {
 
@@ -530,7 +530,7 @@ func (t *JSONTomates) Set(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.Get.
+// Get Decodes r as json to invoke *Tomates.Get.
 // Get the slice.
 func (t *JSONTomates) Get(r *http.Request) (io.Reader, error) {
 
@@ -552,7 +552,7 @@ func (t *JSONTomates) Get(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes r as json to invoke *Tomates.At.
+// At Decodes r as json to invoke *Tomates.At.
 // At return the item at index i.
 func (t *JSONTomates) At(r *http.Request) (io.Reader, error) {
 
@@ -624,7 +624,7 @@ func (t *JSONController) HandleSuccess(w io.Writer, r io.Reader) error {
 	return err
 }
 
-// Decodes r as json to invoke *Controller.GetByID.
+// GetByID Decodes r as json to invoke *Controller.GetByID.
 // GetByID ...
 func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
@@ -654,7 +654,7 @@ func (t *JSONController) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// Decodes reqBody as json to invoke *Controller.UpdateByID.
+// UpdateByID Decodes reqBody as json to invoke *Controller.UpdateByID.
 // Other parameters are passed straight
 // UpdateByID ...
 func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
@@ -681,7 +681,7 @@ func (t *JSONController) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, er
 	return ret, retErr
 }
 
-// Decodes reqBody as json to invoke *Controller.DeleteByID.
+// DeleteByID Decodes reqBody as json to invoke *Controller.DeleteByID.
 // Other parameters are passed straight
 // DeleteByID ...
 func (t *JSONController) DeleteByID(reqID int) (io.Reader, error) {
