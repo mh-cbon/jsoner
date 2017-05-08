@@ -153,7 +153,9 @@ func processType(mode, destName, srcName string, prog *loader.Program, pkg *load
 	// the json input must provide a key/value for each params.
 	structType := astutil.FindStruct(pkg, srcConcrete)
 	structComment := astutil.GetComment(prog, structType.Pos())
+	// todo: might do better to send only annotations or do other improvemenets.
 	structComment = makeCommentLines(structComment)
+
 	fmt.Fprintf(dest, `
 %v.
 // %v is jsoner of %v.
