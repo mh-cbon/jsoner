@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/mh-cbon/astutil"
+	httper "github.com/mh-cbon/httper/lib"
 )
 
 var name = "jsoner"
@@ -25,11 +26,13 @@ func main() {
 	var ver bool
 	var v bool
 	var outPkg string
+	var mode string
 	flag.BoolVar(&help, "help", false, "Show help.")
 	flag.BoolVar(&h, "h", false, "Show help.")
 	flag.BoolVar(&ver, "version", false, "Show version.")
 	flag.BoolVar(&v, "v", false, "Show version.")
 	flag.StringVar(&outPkg, "p", os.Getenv("GOPACKAGE"), "Package name of the new code.")
+	flag.StringVar(&mode, "mode", "std", "Generation mode.")
 
 	flag.Parse()
 
@@ -95,7 +98,7 @@ func main() {
 		srcName := y[0]
 		destName := y[1]
 
-		Imports, res := processType(destName, srcName, foundMethods)
+		Imports, res := processType(mode, destName, srcName, foundMethods)
 		io.Copy(&tBuf, &res)
 		extraImports = append(extraImports, Imports...)
 	}
@@ -132,10 +135,11 @@ func showHelp() {
 	fmt.Printf("	out:   Output destination of the results, use '-' for stdout.\n")
 	fmt.Printf("	types: A list of types such as src:dst.\n")
 	fmt.Printf("	-p:    The name of the package output.\n")
+	fmt.Printf("	-mode: The mode of generation to apply: std|gorilla (defaults to std).\n")
 	fmt.Println()
 }
 
-func processType(destName, srcName string, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
+func processType(mode, destName, srcName string, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
 
 	extraImports := []string{}
 	var b bytes.Buffer
@@ -234,7 +238,7 @@ func (t %v) HandleSuccess(w io.Writer, r io.Reader) error {
 			break
 		}
 
-		if !isUsingConvetionnedParams(params) {
+		if !isUsingConvetionnedParams(mode, params) {
 			// the method params does not use
 			// conventionned params names,
 			// the parameters must be decoded from the
@@ -429,16 +433,14 @@ return ret, retErr`,
 	return extraImports, b
 }
 
-var prefixes = []string{"url", "get", "req", "post", "cookie", "route"}
+var gorillaMode = "gorilla"
+var stdMode = "std"
+var reqBodyVarName = "reqBody"
 
-func isUsingConvetionnedParams(params string) bool {
+func isUsingConvetionnedParams(mode, params string) bool {
 	lParams := strings.Split(params, ",")
 	for _, param := range lParams {
 		k := strings.Split(param, " ")
-		varName := strings.TrimSpace(k[0])
-		if isConvetionnedParam(varName) {
-			return true
-		}
 		if len(k) > 1 {
 			varType := strings.TrimSpace(k[1])
 			if varType == "http.ResponseWriter" {
@@ -449,28 +451,77 @@ func isUsingConvetionnedParams(params string) bool {
 
 			} else if varType == "httper.Cookier" {
 				return true
+
+			} else if varType == "httper.Sessionner" {
+				return true
 			}
+		}
+		varName := strings.TrimSpace(k[0])
+		if isConvetionnedParam(mode, varName) {
+			return true
 		}
 	}
 	return false
 }
 
-var reqBodyVarName = "reqBody"
-
-func isConvetionnedParam(varName string) bool {
+func isConvetionnedParam(mode, varName string) bool {
 	if varName == reqBodyVarName {
-		return true //required case ?
+		return true
 	}
-	for _, prefix := range prefixes {
+	return getVarPrefix(mode, varName) != ""
+}
+
+func getParamConvention(mode, varName string) string {
+	if varName == reqBodyVarName {
+		return reqBodyVarName
+	}
+	return getVarPrefix(mode, varName)
+}
+
+func getSessionProviderFactory(mode string) httper.SessionProvider {
+	var factory httper.SessionProvider
+	if mode == stdMode {
+		factory = &httper.VoidSessionProvider{}
+	} else if mode == gorillaMode {
+		factory = &httper.GorillaSessionProvider{}
+	}
+	return factory
+}
+
+func getDataProviderFactory(mode string) httper.DataerProvider {
+	var factory httper.DataerProvider
+	if mode == stdMode {
+		factory = &httper.StdHTTPDataProvider{}
+	} else if mode == gorillaMode {
+		factory = &httper.GorillaHTTPDataProvider{}
+	}
+	return factory
+}
+
+func getDataProvider(mode string) *httper.DataProviderFacade {
+	return getDataProviderFactory(mode).MakeEmpty().(*httper.DataProviderFacade)
+}
+
+func getVarPrefix(mode, varName string) string {
+	ret := ""
+	provider := getDataProvider(mode)
+	for _, p := range provider.Providers {
+		prefix := p.GetName()
 		if strings.HasPrefix(varName, strings.ToLower(prefix)) {
 			f := string(varName[len(prefix):][0])
-			return f == strings.ToUpper(f)
+			if f == strings.ToUpper(f) {
+				ret = prefix
+				break
+			}
 		} else if strings.HasPrefix(varName, strings.ToUpper(prefix)) {
 			f := string(varName[len(prefix):][0])
-			return f == strings.ToLower(f)
+			if f == strings.ToLower(f) {
+				ret = prefix
+				break
+			}
 		}
 	}
-	return false
+	return ret
 }
 
 func methodsContains(typeName, search string, methods map[string][]*ast.FuncDecl) bool {
