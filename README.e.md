@@ -25,21 +25,19 @@ s/Choose your gun!/[Aux armes!](https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7)
 ```sh
 # Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
+# Create a jsoned version of Tomate to MyTomate to stdout
+lister -p main - Tomate:MyTomate
 ```
 
 # API example
 
 Following example demonstates a program using it to generate a jsoned version of a type.
 
-#### > {{cat "demo/lib.go" | color "go"}}
-
-Following code is the generated implementation of a typed slice of `Tomate`.
-
-#### > {{cat "demo/json_vegetables_gen.go" | color "go"}}
+#### > {{cat "demo/main.go" | color "go"}}
 
 Following code is the generated implementation of a jsoner `Controller` that uses conventionend variable name.
 
-#### > {{cat "demo/json_controller_gen.go" | color "go"}}
+#### > {{cat "demo/controllerjsongen.go" | color "go"}}
 
 #### Conventionned variable name
 
