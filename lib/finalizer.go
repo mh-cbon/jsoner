@@ -7,7 +7,7 @@ import (
 
 // Finalizer finalizes an htpp response.
 type Finalizer interface {
-	HandleError(err error, w http.ResponseWriter, r *http.Request) bool
+	HandleError(err error, w io.Writer, r *http.Request) bool
 	HandleSuccess(w io.Writer, r io.Reader) error
 }
 
@@ -16,9 +16,9 @@ type DefaultFinalizer struct {
 }
 
 // HandleError prints http 500.
-func (f DefaultFinalizer) HandleError(err error, w http.ResponseWriter, r *http.Request) bool {
+func (f DefaultFinalizer) HandleError(err error, w io.Writer, r *http.Request) bool {
 	if x, ok := w.(http.ResponseWriter); ok {
-		x.WriteHeader(http.StatusInternalServerError)
+		http.Error(x, err.Error(), http.StatusInternalServerError)
 	}
 	return true
 }

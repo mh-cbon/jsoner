@@ -4,7 +4,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/ast"
 	"log"
 	"os"
 	"path/filepath"
@@ -150,12 +149,6 @@ func processType(mode string, todo utils.TransformArg, fileOut *utils.FileOut) e
 	fileOut.AddImport("net/http", "")
 	fileOut.AddImport("github.com/mh-cbon/jsoner/lib", "jsoner")
 
-	// func processType(mode, destName, srcName string, prog *loader.Program, pkg *loader.PackageInfo, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
-
-	// extraImports := []string{}
-	// var b bytes.Buffer
-	// dest := &b
-
 	srcConcrete := astutil.GetUnpointedType(srcName)
 	dstConcrete := astutil.GetUnpointedType(destName)
 
@@ -181,8 +174,6 @@ type %v struct{
 		`, dstConcrete, srcName, structComment, dstConcrete, srcName)
 
 	dstStar := astutil.GetPointedType(destName)
-	// hasHandleError := methodsContains(srcName, "HandleError", foundMethods)
-	// hasHandleSuccess := methodsContains(srcName, "HandleSuccess", foundMethods)
 
 	// Make the constructor
 	fmt.Fprintf(dest, `// New%v constructs a jsoner of %v
@@ -605,17 +596,6 @@ func getVarPrefix(mode, varName string) string {
 	return ret
 }
 
-func methodsContains(typeName, search string, methods map[string][]*ast.FuncDecl) bool {
-	if funList, ok := methods[typeName]; ok {
-		for _, fun := range funList {
-			if astutil.MethodName(fun) == search {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func isMarshable(params string) bool {
 	ret := true
 	for _, p := range strings.Split(params, ",") {
@@ -633,13 +613,4 @@ func isMarshable(params string) bool {
 		}
 	}
 	return ret
-}
-
-func getPkgToLoad() string {
-	gopath := filepath.Join(os.Getenv("GOPATH"), "src")
-	pkgToLoad, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	return pkgToLoad[len(gopath)+1:]
 }
