@@ -14,7 +14,7 @@ import (
 func main() {
 
 	//====================================================
-	// 																							demo 1
+	//                                              demo 1
 
 	// setup json rpc calls on a slice of tomates
 	tomatesSlice := NewTomatesGen()
@@ -35,7 +35,7 @@ func main() {
 	fmt.Println(res.Arg0.First().Name)
 
 	//====================================================
-	// 																							demo 2
+	//                                              demo 2
 
 	// setup json rpc calls on a tomate slice controller
 	tomateCtl := NewController(tomatesSlice)
