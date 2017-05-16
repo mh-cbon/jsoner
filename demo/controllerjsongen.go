@@ -46,21 +46,21 @@ func (t *ControllerJSONGen) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.embed)
 }
 
-// GetByID Decodes r as json to invoke *Controller.GetByID.
-// GetByID ...
-func (t *ControllerJSONGen) GetByID(r *http.Request) (io.Reader, error) {
+// GetByName Decodes r as json to invoke *Controller.GetByName.
+// GetByName ...
+func (t *ControllerJSONGen) GetByName(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
 	input := struct {
-		Arg0 int
+		Arg0 string
 	}{}
 	decErr := json.NewDecoder(r.Body).Decode(&input)
 	if decErr != nil {
 		return nil, decErr
 	}
 
-	retVar0 := t.embed.GetByID(input.Arg0)
+	retVar0 := t.embed.GetByName(input.Arg0)
 
 	output := struct {
 		Arg0 Tomate
@@ -81,10 +81,10 @@ func (t *ControllerJSONGen) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// UpdateByID Decodes reqBody as json to invoke *Controller.UpdateByID.
+// UpdateByName Decodes reqBody as json to invoke *Controller.UpdateByName.
 // Other parameters are passed straight
-// UpdateByID ...
-func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
+// UpdateByName ...
+func (t *ControllerJSONGen) UpdateByName(GETname string, reqBody io.Reader) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
@@ -94,8 +94,7 @@ func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader,
 	if decErr != nil {
 		return nil, decErr
 	}
-	retVar1 :=
-		t.embed.UpdateByID(GETid, decBody)
+	retVar1 := t.embed.UpdateByName(GETname, decBody)
 
 	out, encErr := json.Marshal([]interface{}{retVar1})
 	if encErr != nil {
@@ -110,16 +109,15 @@ func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader,
 
 }
 
-// DeleteByID Decodes reqBody as json to invoke *Controller.DeleteByID.
+// DeleteByName Decodes reqBody as json to invoke *Controller.DeleteByName.
 // Other parameters are passed straight
-// DeleteByID ...
-func (t *ControllerJSONGen) DeleteByID(reqID int) (io.Reader, error) {
+// DeleteByName ...
+func (t *ControllerJSONGen) DeleteByName(reqName string) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
 
-	retVar2 :=
-		t.embed.DeleteByID(reqID)
+	retVar2 := t.embed.DeleteByName(reqName)
 
 	out, encErr := json.Marshal([]interface{}{retVar2})
 	if encErr != nil {

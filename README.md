@@ -76,6 +76,10 @@ import (
 //go:generate jsoner *Controller:ControllerJSONGen
 
 func main() {
+
+	//====================================================
+	// 																							demo 1
+
 	// setup json rpc calls on a slice of tomates
 	tomatesSlice := NewTomatesGen()
 	tomatesJSON := NewTomatesJSONGen(tomatesSlice, nil)
@@ -93,6 +97,30 @@ func main() {
 	res := struct{ Arg0 *TomatesGen }{}
 	json.Unmarshal(ret.(*bytes.Buffer).Bytes(), &res)
 	fmt.Println(res.Arg0.First().Name)
+
+	//====================================================
+	// 																							demo 2
+
+	// setup json rpc calls on a tomate slice controller
+	tomateCtl := NewController(tomatesSlice)
+	JSONTomateCtl := NewControllerJSONGen(tomateCtl, nil)
+
+	// add new value for the demo
+	tomatesSlice.Push(Tomate{"Red"})
+
+	// make a GetByName req on the slice.
+	r2 := makeJSONRPCGetByNameReq("Red")
+
+	// apply the req on the json rpcer to the slice of tomates.
+	ret2, err2 := JSONTomateCtl.GetByName(r2)
+	if err2 != nil {
+		panic(err2)
+	}
+
+	// decode the json response
+	res2 := struct{ Arg0 Tomate }{}
+	json.Unmarshal(ret2.(*bytes.Buffer).Bytes(), &res2)
+	fmt.Println(res2.Arg0.Name)
 }
 
 func makeJSONRPCPushReq(t Tomate) *http.Request {
@@ -102,6 +130,26 @@ func makeJSONRPCPushReq(t Tomate) *http.Request {
 		Arg0 []Tomate
 	}{
 		Arg0: []Tomate{t},
+	}
+
+	b, err := json.Marshal(params)
+	if err != nil {
+		panic(err)
+	}
+	var buf closeBuffer
+	(&buf).Write(b)
+	r.Body = &buf
+
+	return r
+}
+
+func makeJSONRPCGetByNameReq(n string) *http.Request {
+	r := &http.Request{}
+
+	params := struct {
+		Arg0 string
+	}{
+		Arg0: n,
 	}
 
 	b, err := json.Marshal(params)
@@ -129,23 +177,35 @@ func (t Tomate) GetID() string {
 	return t.Name
 }
 
+// NewController is a constructor.
+func NewController(backend *TomatesGen) *Controller {
+	return &Controller{backend: backend}
+}
+
 // Controller of some resources.
 type Controller struct {
+	backend *TomatesGen
 }
 
-// GetByID ...
-func (t Controller) GetByID(id int) Tomate {
-	return Tomate{}
+// GetByName ...
+func (t *Controller) GetByName(name string) Tomate {
+	return t.backend.Filter(FilterTomatesGen.ByName(name)).First()
 }
 
-// UpdateByID ...
-func (t Controller) UpdateByID(GETid int, reqBody Tomate) Tomate {
-	return Tomate{}
+// UpdateByName ...
+func (t *Controller) UpdateByName(GETname string, reqBody Tomate) Tomate {
+	t.backend.Map(func(x Tomate) Tomate {
+		if x.Name == GETname {
+			return reqBody
+		}
+		return x
+	})
+	return reqBody
 }
 
-// DeleteByID ...
-func (t *Controller) DeleteByID(reqID int) bool {
-	return false
+// DeleteByName ...
+func (t *Controller) DeleteByName(reqName string) bool {
+	return t.backend.Remove(Tomate{Name: reqName})
 }
 ```
 
@@ -201,21 +261,21 @@ func (t *ControllerJSONGen) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.embed)
 }
 
-// GetByID Decodes r as json to invoke *Controller.GetByID.
-// GetByID ...
-func (t *ControllerJSONGen) GetByID(r *http.Request) (io.Reader, error) {
+// GetByName Decodes r as json to invoke *Controller.GetByName.
+// GetByName ...
+func (t *ControllerJSONGen) GetByName(r *http.Request) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
 	input := struct {
-		Arg0 int
+		Arg0 string
 	}{}
 	decErr := json.NewDecoder(r.Body).Decode(&input)
 	if decErr != nil {
 		return nil, decErr
 	}
 
-	retVar0 := t.embed.GetByID(input.Arg0)
+	retVar0 := t.embed.GetByName(input.Arg0)
 
 	output := struct {
 		Arg0 Tomate
@@ -236,10 +296,10 @@ func (t *ControllerJSONGen) GetByID(r *http.Request) (io.Reader, error) {
 
 }
 
-// UpdateByID Decodes reqBody as json to invoke *Controller.UpdateByID.
+// UpdateByName Decodes reqBody as json to invoke *Controller.UpdateByName.
 // Other parameters are passed straight
-// UpdateByID ...
-func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader, error) {
+// UpdateByName ...
+func (t *ControllerJSONGen) UpdateByName(GETname string, reqBody io.Reader) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
@@ -249,8 +309,7 @@ func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader,
 	if decErr != nil {
 		return nil, decErr
 	}
-	retVar1 :=
-		t.embed.UpdateByID(GETid, decBody)
+	retVar1 := t.embed.UpdateByName(GETname, decBody)
 
 	out, encErr := json.Marshal([]interface{}{retVar1})
 	if encErr != nil {
@@ -265,16 +324,15 @@ func (t *ControllerJSONGen) UpdateByID(GETid int, reqBody io.Reader) (io.Reader,
 
 }
 
-// DeleteByID Decodes reqBody as json to invoke *Controller.DeleteByID.
+// DeleteByName Decodes reqBody as json to invoke *Controller.DeleteByName.
 // Other parameters are passed straight
-// DeleteByID ...
-func (t *ControllerJSONGen) DeleteByID(reqID int) (io.Reader, error) {
+// DeleteByName ...
+func (t *ControllerJSONGen) DeleteByName(reqName string) (io.Reader, error) {
 
 	ret := new(bytes.Buffer)
 	var retErr error
 
-	retVar2 :=
-		t.embed.DeleteByID(reqID)
+	retVar2 := t.embed.DeleteByName(reqName)
 
 	out, encErr := json.Marshal([]interface{}{retVar2})
 	if encErr != nil {

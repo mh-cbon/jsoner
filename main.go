@@ -368,8 +368,7 @@ func (t %v) MarshalJSON() ([]byte, error) {
 			}
 
 			// invoke the embeded method with the new params list.
-			methInvok := fmt.Sprintf(`
-					t.embed.%v(%v)
+			methInvok := fmt.Sprintf(`t.embed.%v(%v)
 				`, methodName, newParamNames)
 
 			if strings.TrimSpace(sRetVars) != "" {
