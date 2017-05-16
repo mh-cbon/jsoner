@@ -2,21 +2,17 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"go/ast"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/loader"
-
 	"github.com/mh-cbon/astutil"
 	httper "github.com/mh-cbon/httper/lib"
-	"github.com/mh-cbon/lister/utils"
+	"github.com/mh-cbon/jsoner/utils"
 )
 
 var name = "jsoner"
@@ -67,43 +63,21 @@ func main() {
 	filesOut := utils.NewFilesOut("github.com/mh-cbon/" + name)
 
 	for _, todo := range todos.Args {
-		srcName := todo.FromTypeName
-		destName := todo.ToTypeName
-		toImport := todo.FromPkgPath
 		if todo.FromPkgPath == "" {
-			log.Println("Skipped ", srcName)
+			log.Println("Skipped ", todo.FromTypeName)
 			continue
 		}
-		prog := astutil.GetProgramFast(toImport)
-		pkg := prog.Package(toImport)
-		foundMethods := astutil.FindMethods(pkg)
 
 		fileOut := filesOut.Get(todo.ToPath)
-		fileOut.PkgName = outPkg
 
+		fileOut.PkgName = outPkg
 		if fileOut.PkgName == "" {
 			fileOut.PkgName = findOutPkg(todo)
 		}
 
-		if todo.FromPkgPath != todo.ToPkgPath {
-			fileOut.AddImport(todo.FromPkgPath, "")
+		if err := processType(mode, todo, fileOut); err != nil {
+			log.Println(err)
 		}
-		if todo.FromPkgPath != todo.ToPkgPath {
-			fileOut.AddImport(todo.FromPkgPath, "")
-		}
-		fileOut.AddImport("bytes", "")
-		fileOut.AddImport("encoding/json", "")
-		fileOut.AddImport("io", "")
-		fileOut.AddImport("net/http", "")
-		fileOut.AddImport("github.com/mh-cbon/jsoner/lib", "jsoner")
-
-		Imports, res := processType(mode, destName, srcName, prog, pkg, foundMethods)
-		for _, i := range Imports {
-			importPath := astutil.GetImportPath(pkg, i)
-			fileOut.AddImport(importPath, i)
-		}
-
-		io.Copy(&fileOut.Body, &res)
 	}
 
 	filesOut.Write(out)
@@ -118,7 +92,7 @@ func showHelp() {
 	fmt.Println()
 	fmt.Println("Usage")
 	fmt.Println()
-	fmt.Printf("  %v [-p name] [...types]\n\n", name)
+	fmt.Printf("  %v [-p name] [-mode name] [...types]\n\n", name)
 	fmt.Printf("  types:  A list of types such as src:dst.\n")
 	fmt.Printf("          A type is defined by its package path and its type name,\n")
 	fmt.Printf("          [pkgpath/]name\n")
@@ -154,11 +128,33 @@ func findOutPkg(todo utils.TransformArg) string {
 	return todo.ToPkgPath
 }
 
-func processType(mode, destName, srcName string, prog *loader.Program, pkg *loader.PackageInfo, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
+func processType(mode string, todo utils.TransformArg, fileOut *utils.FileOut) error {
 
-	extraImports := []string{}
-	var b bytes.Buffer
-	dest := &b
+	dest := &fileOut.Body
+	srcName := todo.FromTypeName
+	destName := todo.ToTypeName
+
+	prog := astutil.GetProgramFast(todo.FromPkgPath)
+	pkg := prog.Package(todo.FromPkgPath)
+	foundMethods := astutil.FindMethods(pkg)
+
+	if todo.FromPkgPath != todo.ToPkgPath {
+		fileOut.AddImport(todo.FromPkgPath, "")
+	}
+	if todo.FromPkgPath != todo.ToPkgPath {
+		fileOut.AddImport(todo.FromPkgPath, "")
+	}
+	fileOut.AddImport("bytes", "")
+	fileOut.AddImport("encoding/json", "")
+	fileOut.AddImport("io", "")
+	fileOut.AddImport("net/http", "")
+	fileOut.AddImport("github.com/mh-cbon/jsoner/lib", "jsoner")
+
+	// func processType(mode, destName, srcName string, prog *loader.Program, pkg *loader.PackageInfo, foundMethods map[string][]*ast.FuncDecl) ([]string, bytes.Buffer) {
+
+	// extraImports := []string{}
+	// var b bytes.Buffer
+	// dest := &b
 
 	srcConcrete := astutil.GetUnpointedType(srcName)
 	dstConcrete := astutil.GetUnpointedType(destName)
@@ -238,7 +234,9 @@ func (t %v) MarshalJSON() ([]byte, error) {
 		// structProps := astutil.MethodParamsToProps(m)
 
 		importIDs := astutil.GetSignatureImportIdentifiers(m)
-		extraImports = append(extraImports, importIDs...)
+		for _, i := range importIDs {
+			fileOut.AddImport(i, "")
+		}
 		// receiverName := astutil.ReceiverName(m)
 		comment := astutil.GetComment(prog, m.Pos())
 		comment = makeCommentLines(comment)
@@ -419,7 +417,7 @@ func (t %v) MarshalJSON() ([]byte, error) {
 		}
 	}
 
-	return extraImports, b
+	return nil
 }
 
 func getParamType(lParams []string, name string) string {
