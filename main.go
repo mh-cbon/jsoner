@@ -223,11 +223,6 @@ func (t %v) MarshalJSON() ([]byte, error) {
 		sRetVars = strings.TrimSpace(sRetVars)
 		hasErr := astutil.MethodReturnError(m)
 		// structProps := astutil.MethodParamsToProps(m)
-
-		importIDs := astutil.GetSignatureImportIdentifiers(m)
-		for _, i := range importIDs {
-			fileOut.AddImport(i, "")
-		}
 		// receiverName := astutil.ReceiverName(m)
 		comment := astutil.GetComment(prog, m.Pos())
 		comment = makeCommentLines(comment)
@@ -244,6 +239,11 @@ func (t %v) MarshalJSON() ([]byte, error) {
 		// todo: improve marshaller support detection.
 		if !isMarshable(params) {
 			break
+		}
+
+		importIDs := astutil.GetSignatureImportIdentifiers(m)
+		for _, i := range importIDs {
+			fileOut.AddImport(astutil.GetImportPath(pkg, i), "")
 		}
 
 		if !isUsingConvetionnedParams(mode, params) {

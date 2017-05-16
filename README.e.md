@@ -26,7 +26,7 @@ s/Choose your gun!/[Aux armes!](https://www.youtube.com/watch?v=hD-wD_AMRYc&t=7)
 # Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 # Create a jsoned version of Tomate to MyTomate to stdout
-lister -p main - Tomate:MyTomate
+jsoner -p main - Tomate:MyTomate
 ```
 
 # API example

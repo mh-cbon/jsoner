@@ -37,7 +37,7 @@ jsoner 0.0.0
 
 Usage
 
-  jsoner [-p name] [...types]
+  jsoner [-p name] [-mode name] [...types]
 
   types:  A list of types such as src:dst.
           A type is defined by its package path and its type name,
@@ -53,7 +53,7 @@ Usage
 # Create a jsoned version of Tomate to MyTomate
 jsoner tomate_gen.go Tomate:MyTomate
 # Create a jsoned version of Tomate to MyTomate to stdout
-lister -p main - Tomate:MyTomate
+jsoner -p main - Tomate:MyTomate
 ```
 
 # API example
